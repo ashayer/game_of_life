@@ -1,52 +1,133 @@
 import './App.css';
 
-import React, { useState } from 'react';
+import produce from 'immer';
+import React, { useCallback, useRef, useState } from 'react';
 
-import logo from './logo.svg';
+const numRows: number = 50;
+const numCols: number = 100;
+
+const createRandomGrid = () => {
+  let rows = [];
+  for (let i = 0; i < numRows; i++) {
+    rows.push(Array.from(Array(numCols), () => (Math.random() > 0.5 ? 1 : 0)));
+  }
+  return rows;
+};
+
+const createEmptyGrid = () => {
+  let rows = [];
+  for (let i = 0; i < numRows; i++) {
+    rows.push(Array.from(Array(numCols), () => 0));
+  }
+  return rows;
+};
+
+const operations = [
+  [0, 1],
+  [0, -1],
+  [1, -1],
+  [-1, 1],
+  [1, 1],
+  [-1, -1],
+  [1, 0],
+  [-1, 0],
+];
 
 function App() {
-  const [count, setCount] = useState(0);
+  const [grid, setGrid] = useState(createRandomGrid());
+  const [running, setRunning] = useState(false);
+
+  const runningRef = useRef(running);
+  runningRef.current;
+
+  const runGame = useCallback(() => {
+    if (!runningRef.current) {
+      return;
+    }
+
+    setGrid((g) => {
+      return produce(g, (gridCopy) => {
+        for (let i = 0; i < numRows; i++) {
+          for (let j = 0; j < numCols; j++) {
+            let neighbors = 0;
+            operations.forEach(([x, y]) => {
+              const newI = i + x;
+              const newJ = j + y;
+              if (newI >= 0 && newI < numRows && newJ >= 0 && newJ < numCols) {
+                neighbors += g[newI][newJ];
+              }
+            });
+
+            if (neighbors < 2 || neighbors > 3) {
+              gridCopy[i][j] = 0;
+            } else if (g[i][j] === 0 && neighbors === 3) {
+              gridCopy[i][j] = 1;
+            }
+          }
+        }
+      });
+    });
+    setTimeout(runGame, 100);
+  }, []);
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p className="header">
-          🚀 Vite + React + Typescript 🤘 & <br />
-          Eslint 🔥+ Prettier
-        </p>
-
-        <div className="body">
-          <button onClick={() => setCount((count) => count + 1)}>
-            🪂 Click me : {count}
-          </button>
-
-          <p> Don&apos;t forgot to install Eslint and Prettier in Your Vscode.</p>
-
-          <p>
-            Mess up the code in <code>App.tsx </code> and save the file.
-          </p>
-          <p>
-            <a
-              className="App-link"
-              href="https://reactjs.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learn React
-            </a>
-            {' | '}
-            <a
-              className="App-link"
-              href="https://vitejs.dev/guide/features.html"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Vite Docs
-            </a>
-          </p>
-        </div>
-      </header>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <button
+        onClick={() => {
+          setRunning(!running);
+          runningRef.current = false;
+          if (!running) {
+            runningRef.current = true;
+            runGame();
+          }
+        }}
+      >
+        {`${running ? 'Stop' : 'Start'} simulation`}
+      </button>
+      <button
+        onClick={() => {
+          setGrid(createEmptyGrid());
+        }}
+      >
+        Empty Grid
+      </button>
+      <button
+        onClick={() => {
+          setGrid(createRandomGrid());
+        }}
+      >
+        Random Grid
+      </button>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${numCols}, 15px`,
+          transition: 'all 0.2s ease',
+        }}
+      >
+        {grid.map((rows, rowIdx) =>
+          rows.map((col, colIdx) => (
+            <div
+              tabIndex={0}
+              role="button"
+              key={`${rowIdx}-${colIdx}`}
+              onClick={() => {
+                const newGrid = produce(grid, (gridCopy) => {
+                  gridCopy[rowIdx][colIdx] = gridCopy[rowIdx][colIdx] ? 0 : 1;
+                });
+                setGrid(newGrid);
+              }}
+              style={{
+                width: 15,
+                height: 15,
+                backgroundColor: grid[rowIdx][colIdx] ? 'black' : 'white',
+                border: '1px solid black',
+              }}
+              aria-hidden="true"
+            />
+          )),
+        )}
+      </div>
     </div>
   );
 }
