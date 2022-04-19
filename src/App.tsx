@@ -102,7 +102,6 @@ function App() {
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${numCols}, 15px`,
-          transition: 'all 0.2s ease',
         }}
       >
         {grid.map((rows, rowIdx) =>
