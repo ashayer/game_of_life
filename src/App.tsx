@@ -3,17 +3,21 @@ import './App.css';
 import produce from 'immer';
 import React, { useCallback, useRef, useState } from 'react';
 
+// initial grid size constants
 const numRows: number = 50;
 const numCols: number = 100;
 
+// helper functions to create grid of random cells
 const createRandomGrid = () => {
   let rows = [];
   for (let i = 0; i < numRows; i++) {
+    // value of 1 is alive and 0 is dead
     rows.push(Array.from(Array(numCols), () => (Math.random() > 0.5 ? 1 : 0)));
   }
   return rows;
 };
 
+// helper function  to create empty grid
 const createEmptyGrid = () => {
   let rows = [];
   for (let i = 0; i < numRows; i++) {
@@ -22,6 +26,7 @@ const createEmptyGrid = () => {
   return rows;
 };
 
+// the 8 operations to check neighborhood
 const operations = [
   [0, 1],
   [0, -1],
@@ -40,6 +45,7 @@ function App() {
   const runningRef = useRef(running);
   runningRef.current;
 
+  // applies the rules to each grid, treats grid as immutable
   const runGame = useCallback(() => {
     if (!runningRef.current) {
       return;
@@ -67,7 +73,8 @@ function App() {
         }
       });
     });
-    setTimeout(runGame, 100);
+    // animation speed
+    setTimeout(runGame, 250);
   }, []);
 
   return (
@@ -119,8 +126,7 @@ function App() {
               style={{
                 width: 15,
                 height: 15,
-                backgroundColor: grid[rowIdx][colIdx] ? 'black' : 'white',
-                border: '1px solid black',
+                backgroundColor: grid[rowIdx][colIdx] ? 'black' : '#C9DAF8',
               }}
               aria-hidden="true"
             />
